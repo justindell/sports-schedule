@@ -47,8 +47,14 @@ class Schedule
       time = Time.parse(event["date"])
       next unless time > Time.now
 
-      Event.new(event["name"], time.getlocal, event.dig("links", 0, "href"))
+      Event.new(full_name(event), time.getlocal, event.dig("links", 0, "href"))
     end
+  end
+
+  private
+
+  def full_name(event)
+    "#{event['name']} (#{event.dig('competitions', 0, 'broadcasts', 0, 'media', 'shortName')})"
   end
 end
 
