@@ -16,6 +16,12 @@ class Schedule
     "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/teams/356/schedule"
   ].freeze
 
+  # ESPN/Akamai blocks HTTParty's default "Ruby" User-Agent with a 403 HTML page.
+  REQUEST_HEADERS = {
+    "User-Agent" => "SportsSchedule/1.0",
+    "Accept" => "application/json"
+  }.freeze
+
   Event = Data.define(:event, :date, :link) do
     def to_h
       {
@@ -40,10 +46,13 @@ class Schedule
   end
 
   def fetch_team_events
-    data = HTTParty.get(@url)
-    return [] unless data
+    response = HTTParty.get(@url, headers: REQUEST_HEADERS)
+    return [] unless response.success?
 
-    data["events"].filter_map do |event|
+    events = response["events"]
+    return [] unless events.is_a?(Array)
+
+    events.filter_map do |event|
       time = Time.parse(event["date"])
       next unless time > Time.now
 
